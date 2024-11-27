@@ -5,9 +5,11 @@ const path = require("path");
 const { listNginxFiles } = require("../modules/status");
 
 // Route to list files in /etc/nginx/conf.d/
-router.get("/list-nginx-files", (req, res) => {
+router.get("/list-nginx-files", async (req, res) => {
   const directoryPath = "/etc/nginx/conf.d/";
-  const fileList = listNginxFiles(directoryPath);
+  const fileList = await listNginxFiles(directoryPath);
+  console.log("Files in /etc/nginx/conf.d/");
+  console.log(fileList);
   res.json({ files: fileList });
   // // Read the directory
   // fs.readdir(directoryPath, (err, files) => {
