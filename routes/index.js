@@ -8,6 +8,7 @@ router.get("/", function (req, res, next) {
 });
 
 router.get("/machine", (req, res) => {
+  console.log("in GET /machine");
   const machineName = os.hostname();
   res.json({ machineName });
 });
