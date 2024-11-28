@@ -2,33 +2,56 @@ var express = require("express");
 var router = express.Router();
 const fs = require("fs");
 const path = require("path");
-const { listNginxFiles } = require("../modules/status");
+const {
+  createNginxFilesList,
+  createPm2AppList,
+  getLocalIpAddress,
+  mergePm2AndNginxLists,
+} = require("../modules/status");
+const App = require("../models/app");
+// const User = require("../models/user");
 
 // Route to list files in /etc/nginx/conf.d/
 router.get("/list-nginx-files", async (req, res) => {
-  const directoryPath = "/etc/nginx/conf.d/";
-  const fileList = await listNginxFiles(directoryPath);
-  console.log("Files in /etc/nginx/conf.d/");
-  console.log(fileList);
-  res.json({ files: fileList });
-  // // Read the directory
-  // fs.readdir(directoryPath, (err, files) => {
-  //   if (err) {
-  //     console.error("Error reading directory:", err);
-  //     return res.status(500).send("Error reading directory");
-  //   }
+  const nginxFilesList = await createNginxFilesList(
+    process.env.NGINX_CONF_D_PATH
+  );
+  console.log(`file nginx: ${process.env.NGINX_CONF_D_PATH}`);
+  // console.log(nginxFilesList);
 
-  //   // Filter only files (not directories)
-  //   const fileList = files.filter((file) => {
-  //     const fullPath = path.join(directoryPath, file);
-  //     return fs.statSync(fullPath).isFile();
-  //   });
+  // GET
+  // -> name of app [pm2]
+  // -> urls [check]
+  // -> local IP
+  // -> port number [check]
+  pm2AppList = createPm2AppList();
 
-  //   console.log("Files in /etc/nginx/conf.d/");
-  //   console.log(fileList);
-
-  //   res.json({ files: fileList });
-  // });
+  const appList = mergePm2AndNginxLists(pm2AppList.appsList, nginxFilesList);
+  if (process.env.NODE_ENV === "production") {
+    appList.map((elem) => {
+      App.find({ localIp: elem.localIpAddress, port: elem.portNumber }).then(
+        (app) => {
+          App.updateOne(
+            { localIp: elem.localIpAddress, port: elem.portNumber },
+            {
+              name: elem.name,
+              urls: elem.serverNames,
+              lastUpdatedDate: new Date(),
+            }
+          );
+        }
+      );
+      const newApp = new App({
+        localIp: elem.localIpAddress,
+        port: elem.portNumber,
+        name: elem.name,
+        urls: elem.serverNames,
+        lastUpdatedDate: new Date(),
+      });
+      newApp.save();
+    });
+  }
+  res.json({ appList });
 });
 
 module.exports = router;

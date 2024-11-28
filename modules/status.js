@@ -1,5 +1,7 @@
 const fs = require("fs").promises;
 const path = require("path");
+const pm2 = require("pm2");
+const os = require("os");
 
 // async function listNginxFiles(directoryPath) {
 //   try {
@@ -66,7 +68,7 @@ async function extractFileDetails(filePath) {
  * @param {string} directoryPath - Path to the directory.
  * @returns {Promise<{ fileName: string, serverNames: string[], portNumber: string }[]>}
  */
-async function listNginxFiles(directoryPath) {
+async function createNginxFilesList(directoryPath) {
   try {
     const files = await fs.readdir(directoryPath);
 
@@ -91,4 +93,132 @@ async function listNginxFiles(directoryPath) {
   }
 }
 
-module.exports = { listNginxFiles };
+function createPm2AppList() {
+  console.log("- in createPm2AppList");
+
+  pm2.connect((err) => {
+    if (err) {
+      console.log("-----> errro caought");
+      console.error(err);
+      // return res.status(500).send({ error: "Failed to connect to PM2" });
+      return { error: "Failed to connect to PM2" };
+    }
+
+    pm2.list((err, list) => {
+      pm2.disconnect(); // Disconnect PM2
+      if (err) {
+        console.error(err);
+        // return res.status(500).send({ error: "Failed to retrieve app list" });
+        return { error: "Failed to retrieve app list" };
+      }
+
+      // if (list.length == 0) {
+      //   // return res.json({ result: true, appsList: fauxData });
+      //   return { result: true, appsList: fauxData };
+      // }
+      // using map like this appends a {} for each 'app' in list
+      const apps = list.map((app) => ({
+        id: app.pm_id,
+        name: app.name,
+        status: app.pm2_env.status,
+        portNumber: app.pm2_env?.PORT,
+        appProjectPath: app.pm2_env.pm_cwd ?? "no cwd",
+      }));
+
+      // return res.json(apps);
+      // return res.json({ result: true, appsList: apps });
+      return { result: true, appsList: apps };
+    });
+  });
+
+  return { appsList: fauxData };
+}
+
+// Function to get the local IP address
+function getLocalIpAddress() {
+  const interfaces = os.networkInterfaces();
+  for (const iface in interfaces) {
+    for (const alias of interfaces[iface]) {
+      if (alias.family === "IPv4" && !alias.internal) {
+        return alias.address; // Return the first non-internal IPv4 address
+      }
+    }
+  }
+  return "127.0.0.1"; // Default to localhost if no address is found
+}
+
+// Helper function to find duplicates in a list by portNumber
+function filterDuplicatePorts(objectList) {
+  const portCount = {};
+  const duplicates = new Set();
+
+  // Count occurrences of each portNumber
+  objectList.forEach((obj) => {
+    if (obj.portNumber in portCount) {
+      portCount[obj.portNumber]++;
+      duplicates.add(obj.portNumber); // Track duplicates
+    } else {
+      portCount[obj.portNumber] = 1;
+    }
+  });
+
+  // Filter out objects with duplicate portNumbers
+  const filteredList = objectList.filter(
+    (obj) => !duplicates.has(obj.portNumber)
+  );
+
+  // Log a message for each removed portNumber
+  duplicates.forEach((port) => {
+    console.log(`-----> Objects with portNumber ** ${port} ** were removed.`);
+  });
+
+  return filteredList;
+}
+
+function mergePm2AndNginxLists(pm2AppList, nginxFilesList) {
+  // Detect duplicates in both lists
+  console.log(" loop over pm2AppList");
+  const pm2NoDups = filterDuplicatePorts(pm2AppList);
+  console.log(" loop over nginxFilesList");
+  const nginxNoDups = filterDuplicatePorts(nginxFilesList);
+  const localIpAddress = getLocalIpAddress();
+
+  const mergedList = pm2NoDups.map((pm2App) => {
+    const matchingNginxFile = nginxNoDups.find(
+      (nginxFile) => nginxFile.portNumber == pm2App.portNumber
+    );
+    return matchingNginxFile
+      ? { ...matchingNginxFile, ...pm2App, localIpAddress }
+      : { ...pm2App, localIpAddress };
+  });
+
+  return mergedList;
+}
+
+module.exports = {
+  getLocalIpAddress,
+  createNginxFilesList,
+  createPm2AppList,
+  mergePm2AndNginxLists,
+};
+
+const fauxData = [
+  {
+    id: 11,
+    name: "FunkyChicken",
+    status: "stopped",
+    portNumber: 8001,
+  },
+  {
+    id: 13,
+    name: "The404ManagerFront",
+    status: "online",
+    portNumber: 8004,
+  },
+  {
+    id: 14,
+    name: "The404ManagerBack",
+    status: "online",
+    portNumber: 8000,
+  },
+];
