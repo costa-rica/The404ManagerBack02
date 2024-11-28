@@ -95,7 +95,12 @@ async function createNginxFilesList(directoryPath) {
 
 function createPm2AppList() {
   console.log("- in createPm2AppList");
-
+  if (process.env.NODE_ENV != "production") {
+    console.error(
+      "* sending fauxData due to process.env.NODE_ENV not production *"
+    );
+    return { appsList: fauxData };
+  }
   pm2.connect((err) => {
     if (err) {
       console.log("-----> errro caought");
@@ -130,8 +135,6 @@ function createPm2AppList() {
       return { result: true, appsList: apps };
     });
   });
-
-  return { appsList: fauxData };
 }
 
 // Function to get the local IP address
