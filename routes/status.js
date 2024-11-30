@@ -36,7 +36,7 @@ router.get("/list-nginx-files", async (req, res) => {
     console.log("prop: ", prop);
   }
   console.log("--- that ass about pm2AppList ----");
-  // const appList = mergePm2AndNginxLists(pm2AppList.appsList, nginxFilesList);
+
   const appList = mergePm2AndNginxLists(pm2AppList, nginxFilesList);
   if (process.env.NODE_ENV === "production") {
     appList.map((elem) => {
