@@ -129,10 +129,16 @@ function createPm2AppList() {
         portNumber: app.pm2_env?.PORT,
         appProjectPath: app.pm2_env.pm_cwd ?? "no cwd",
       }));
-
+      apps.map((elem,index) =>{
+        console.log(`appList index #: ${index}`)
+        console.log(`appList elem: ${elem}`)
+        console.log(`appList elem.name: ${elem.name}`)
+      })
+      console.log("- finished createPm2AppList")
+      console.log("- finished createPm2AppList")
       // return res.json(apps);
       // return res.json({ result: true, appsList: apps });
-      return { result: true, appsList: apps };
+      return { result: true, "appsList": apps };
     });
   });
 }
