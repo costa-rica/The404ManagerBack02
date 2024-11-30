@@ -4,6 +4,21 @@
 
 ## .env
 
+Latest version
+
+```env
+APP_NAME="The404MangerBack02"
+PROJECT_RESOURCES=/Users/nick/Documents/_project_resources/404serverManager02
+DB_CONNECTION_STRING=
+NODE_ENV=production
+FILE_PATH_SYSLOG=/Users/nick/Documents/_testData/DevelopmentServerNginx/syslog/syslog
+FILE_PATH_PM2_OUTPUT=/home/dashanddata_user/.pm2/logs/combined.log
+FILE_PATH_PM2_ERROR=/home/dashanddata_user/.pm2/logs/combined-error.log
+NGINX_CONF_D_PATH=/Users/nick/Documents/_testData/DevelopmentServerNginx/conf.d
+```
+
+OLD
+
 ```env
 APP_NAME="The404MangerBack02"
 PROJECT_RESOURCES=/home/dashanddata_user/project_resources/The404MangerBack02

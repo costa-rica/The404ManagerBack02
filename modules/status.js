@@ -108,6 +108,7 @@ function createPm2AppList() {
       // return res.status(500).send({ error: "Failed to connect to PM2" });
       return { error: "Failed to connect to PM2" };
     }
+    console.log("---> pm2.connect() no errror 👍");
 
     pm2.list((err, list) => {
       pm2.disconnect(); // Disconnect PM2
@@ -116,7 +117,7 @@ function createPm2AppList() {
         // return res.status(500).send({ error: "Failed to retrieve app list" });
         return { error: "Failed to retrieve app list" };
       }
-
+      console.log("---> pm2.list() no errror 👍");
       // if (list.length == 0) {
       //   // return res.json({ result: true, appsList: fauxData });
       //   return { result: true, appsList: fauxData };
@@ -129,16 +130,17 @@ function createPm2AppList() {
         portNumber: app.pm2_env?.PORT,
         appProjectPath: app.pm2_env.pm_cwd ?? "no cwd",
       }));
-      apps.map((elem,index) =>{
-        console.log(`appList index #: ${index}`)
-        console.log(`appList elem: ${elem}`)
-        console.log(`appList elem.name: ${elem.name}`)
-      })
-      console.log("- finished createPm2AppList")
-      console.log("- finished createPm2AppList")
+      apps.map((elem, index) => {
+        console.log(`appList index #: ${index}`);
+        console.log(`appList elem: ${elem}`);
+        console.log(`appList elem.name: ${elem.name}`);
+      });
+      console.log("- finished createPm2AppList");
+      console.log("- finished createPm2AppList");
       // return res.json(apps);
       // return res.json({ result: true, appsList: apps });
-      return { result: true, "appsList": apps };
+      // return { result: true, appsList: apps };
+      return { result: true, appsList: apps };
     });
   });
 }

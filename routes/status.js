@@ -13,6 +13,8 @@ const App = require("../models/app");
 
 // Route to list files in /etc/nginx/conf.d/
 router.get("/list-nginx-files", async (req, res) => {
+  // // Test uncaught exception
+  // throw new Error("Test Uncaught Exception");
   const nginxFilesList = await createNginxFilesList(
     process.env.NGINX_CONF_D_PATH
   );
@@ -24,9 +26,18 @@ router.get("/list-nginx-files", async (req, res) => {
   // -> urls [check]
   // -> local IP
   // -> port number [check]
-  pm2AppList = createPm2AppList();
+  pm2AppList = await createPm2AppList();
+  console.log("-- what is pm2AppList ???");
+  console.log(pm2AppList);
+  console.log("typeof ::::::::");
+  console.log(typeof pm2AppList);
 
-  const appList = mergePm2AndNginxLists(pm2AppList.appsList, nginxFilesList);
+  for (prop in pm2AppList) {
+    console.log("prop: ", prop);
+  }
+  console.log("--- that ass about pm2AppList ----");
+  // const appList = mergePm2AndNginxLists(pm2AppList.appsList, nginxFilesList);
+  const appList = mergePm2AndNginxLists(pm2AppList, nginxFilesList);
   if (process.env.NODE_ENV === "production") {
     appList.map((elem) => {
       App.find({ localIp: elem.localIpAddress, port: elem.portNumber }).then(
