@@ -93,7 +93,7 @@ async function createNginxFilesList(directoryPath) {
   }
 }
 
-function createPm2AppList() {
+async function createPm2AppList() {
   console.log("- in createPm2AppList");
   if (process.env.NODE_ENV != "production") {
     console.error(
@@ -101,28 +101,30 @@ function createPm2AppList() {
     );
     return { appsList: fauxData };
   }
-  pm2.connect((err) => {
-    if (err) {
-      console.log("-----> errro caought");
-      console.error(err);
-      // return res.status(500).send({ error: "Failed to connect to PM2" });
-      return { error: "Failed to connect to PM2" };
-    }
-    console.log("---> pm2.connect() no errror 👍");
 
+  // Wrap pm2.connect in a Promise
+  await new Promise((resolve, reject) => {
+    pm2.connect((err) => {
+      if (err) {
+        console.error("-----> Error caught during pm2.connect");
+        return reject(new Error("Failed to connect to PM2"));
+      }
+      console.log("---> pm2.connect() no error 👍");
+      resolve();
+    });
+  });
+
+  // Wrap pm2.list in a Promise
+  const apps = await new Promise((resolve, reject) => {
     pm2.list((err, list) => {
       pm2.disconnect(); // Disconnect PM2
       if (err) {
-        console.error(err);
-        // return res.status(500).send({ error: "Failed to retrieve app list" });
-        return { error: "Failed to retrieve app list" };
+        console.error("-----> Error caught during pm2.list");
+        return reject(new Error("Failed to retrieve app list"));
       }
-      console.log("---> pm2.list() no errror 👍");
-      // if (list.length == 0) {
-      //   // return res.json({ result: true, appsList: fauxData });
-      //   return { result: true, appsList: fauxData };
-      // }
-      // using map like this appends a {} for each 'app' in list
+      console.log("---> pm2.list() no error 👍");
+
+      // Transform the app list into the desired format
       const apps = list.map((app) => ({
         id: app.pm_id,
         name: app.name,
@@ -130,19 +132,18 @@ function createPm2AppList() {
         portNumber: app.pm2_env?.PORT,
         appProjectPath: app.pm2_env.pm_cwd ?? "no cwd",
       }));
-      apps.map((elem, index) => {
+
+      apps.forEach((elem, index) => {
         console.log(`appList index #: ${index}`);
-        console.log(`appList elem: ${elem}`);
+        console.log(`appList elem:`, elem);
         console.log(`appList elem.name: ${elem.name}`);
       });
+
       console.log("- finished createPm2AppList");
-      console.log("- finished createPm2AppList");
-      // return res.json(apps);
-      // return res.json({ result: true, appsList: apps });
-      // return { result: true, appsList: apps };
-      return { result: true, appsList: apps };
+      resolve(apps);
     });
   });
+  return apps;
 }
 
 // Function to get the local IP address
