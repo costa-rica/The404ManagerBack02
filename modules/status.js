@@ -3,31 +3,6 @@ const path = require("path");
 const pm2 = require("pm2");
 const os = require("os");
 
-// async function listNginxFiles(directoryPath) {
-//   try {
-//     const files = await fs.readdir(directoryPath);
-
-//     // Filter only files (not directories)
-//     const fileList = [];
-//     for (const file of files) {
-//       const fullPath = path.join(directoryPath, file);
-//       const stat = await fs.stat(fullPath);
-//       if (stat.isFile()) {
-//         fileList.push(file);
-//       }
-//     }
-
-//     return fileList;
-//   } catch (error) {
-//     throw new Error(`Failed to list files: ${error.message}`);
-//   }
-// }
-
-/**
- * Extracts server names and port numbers from a configuration file.
- * @param {string} filePath - Path to the configuration file.
- * @returns {Promise<{ serverNames: string[], portNumber: string }>}
- */
 async function extractFileDetails(filePath) {
   try {
     const fileContent = await fs.readFile(filePath, "utf8");
@@ -63,11 +38,6 @@ async function extractFileDetails(filePath) {
   }
 }
 
-/**
- * Lists all files in a specified directory and extracts additional details.
- * @param {string} directoryPath - Path to the directory.
- * @returns {Promise<{ fileName: string, serverNames: string[], portNumber: string }[]>}
- */
 async function createNginxFilesList(directoryPath) {
   try {
     const files = await fs.readdir(directoryPath);
@@ -98,12 +68,6 @@ async function createNginxFilesList(directoryPath) {
 
 async function createPm2AppList() {
   console.log("- in createPm2AppList");
-  // if (process.env.NODE_ENV != "production") {
-  //   console.error(
-  //     "* sending fauxData due to process.env.NODE_ENV not production *"
-  //   );
-  //   return { appsList: [] };
-  // }
 
   // Wrap pm2.connect in a Promise
   await new Promise((resolve, reject) => {
@@ -215,24 +179,3 @@ module.exports = {
   createPm2AppList,
   mergePm2AndNginxLists,
 };
-
-// const fauxData = [
-//   {
-//     id: 11,
-//     name: "FunkyChicken",
-//     status: "stopped",
-//     portNumber: 8001,
-//   },
-//   {
-//     id: 13,
-//     name: "The404ManagerFront",
-//     status: "online",
-//     portNumber: 8004,
-//   },
-//   {
-//     id: 14,
-//     name: "The404ManagerBack",
-//     status: "online",
-//     portNumber: 8000,
-//   },
-// ];

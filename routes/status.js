@@ -11,7 +11,7 @@ const {
 const App = require("../models/app");
 // const User = require("../models/user");
 
-// Route to list files in /etc/nginx/conf.d/
+// Route to list files in /etc/nginx/conf.d/ and list of pm2 ecosystem files that are active (i.e pm2 has started at least once and not deleted)
 // router.get("/list-nginx-files", async (req, res) => {
 router.get("/list-apps", async (req, res) => {
   const nginxFilesList = await createNginxFilesList(
@@ -33,29 +33,6 @@ router.get("/list-apps", async (req, res) => {
         { $set: updatedProps }, // Update fields
         { upsert: true } // Create a new document if no match is found
       );
-
-      // App.find({ localIp: elem.localIpAddress, port: elem.portNumber }).then(
-      //   (app) => {
-      //     App.updateOne(
-      //       { localIp: elem.localIpAddress, port: elem.port },
-      //       {
-      //         name: elem.name,
-      //         urls: elem.serverNames,
-      //         lastUpdatedDate: new Date(),
-      //       }
-      //     );
-      //   }
-
-      // );
-
-      // const newApp = new App({
-      //   localIp: elem.localIpAddress,
-      //   port: elem.portNumber,
-      //   name: elem.name,
-      //   urls: elem.serverNames,
-      //   lastUpdatedDate: new Date(),
-      // });
-      // newApp.save();
     });
   }
   res.json({ appList });
