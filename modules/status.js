@@ -55,7 +55,7 @@ async function extractFileDetails(filePath) {
       }
     }
 
-    return { serverNames, portNumber };
+    return { urls: serverNames, port: portNumber };
   } catch (error) {
     throw new Error(
       `Failed to extract details from file ${filePath}: ${error.message}`
@@ -78,11 +78,14 @@ async function createNginxFilesList(directoryPath) {
       const stat = await fs.stat(fullPath);
 
       if (stat.isFile()) {
-        const { serverNames, portNumber } = await extractFileDetails(fullPath);
+        // const { serverNames, portNumber } = await extractFileDetails(fullPath);
+        const { urls, port } = await extractFileDetails(fullPath);
         fileList.push({
           fileName: file,
-          serverNames,
-          portNumber,
+          // serverNames,
+          // portNumber,
+          urls,
+          port,
         });
       }
     }
@@ -95,12 +98,12 @@ async function createNginxFilesList(directoryPath) {
 
 async function createPm2AppList() {
   console.log("- in createPm2AppList");
-  if (process.env.NODE_ENV != "production") {
-    console.error(
-      "* sending fauxData due to process.env.NODE_ENV not production *"
-    );
-    return { appsList: fauxData };
-  }
+  // if (process.env.NODE_ENV != "production") {
+  //   console.error(
+  //     "* sending fauxData due to process.env.NODE_ENV not production *"
+  //   );
+  //   return { appsList: [] };
+  // }
 
   // Wrap pm2.connect in a Promise
   await new Promise((resolve, reject) => {
@@ -129,7 +132,8 @@ async function createPm2AppList() {
         id: app.pm_id,
         name: app.name,
         status: app.pm2_env.status,
-        portNumber: app.pm2_env?.PORT,
+        // portNumber: app.pm2_env?.PORT,
+        port: app.pm2_env?.PORT,
         appProjectPath: app.pm2_env.pm_cwd ?? "no cwd",
       }));
 
@@ -166,18 +170,16 @@ function filterDuplicatePorts(objectList) {
 
   // Count occurrences of each portNumber
   objectList.forEach((obj) => {
-    if (obj.portNumber in portCount) {
-      portCount[obj.portNumber]++;
-      duplicates.add(obj.portNumber); // Track duplicates
+    if (obj.port in portCount) {
+      portCount[obj.port]++;
+      duplicates.add(obj.port); // Track duplicates
     } else {
-      portCount[obj.portNumber] = 1;
+      portCount[obj.port] = 1;
     }
   });
 
   // Filter out objects with duplicate portNumbers
-  const filteredList = objectList.filter(
-    (obj) => !duplicates.has(obj.portNumber)
-  );
+  const filteredList = objectList.filter((obj) => !duplicates.has(obj.port));
 
   // Log a message for each removed portNumber
   duplicates.forEach((port) => {
@@ -197,11 +199,11 @@ function mergePm2AndNginxLists(pm2AppList, nginxFilesList) {
 
   const mergedList = pm2NoDups.map((pm2App) => {
     const matchingNginxFile = nginxNoDups.find(
-      (nginxFile) => nginxFile.portNumber == pm2App.portNumber
+      (nginxFile) => nginxFile.port == pm2App.port
     );
     return matchingNginxFile
-      ? { ...matchingNginxFile, ...pm2App, localIpAddress }
-      : { ...pm2App, localIpAddress };
+      ? { ...matchingNginxFile, ...pm2App, localIp: localIpAddress }
+      : { ...pm2App, localIp: localIpAddress };
   });
 
   return mergedList;
@@ -214,23 +216,23 @@ module.exports = {
   mergePm2AndNginxLists,
 };
 
-const fauxData = [
-  {
-    id: 11,
-    name: "FunkyChicken",
-    status: "stopped",
-    portNumber: 8001,
-  },
-  {
-    id: 13,
-    name: "The404ManagerFront",
-    status: "online",
-    portNumber: 8004,
-  },
-  {
-    id: 14,
-    name: "The404ManagerBack",
-    status: "online",
-    portNumber: 8000,
-  },
-];
+// const fauxData = [
+//   {
+//     id: 11,
+//     name: "FunkyChicken",
+//     status: "stopped",
+//     portNumber: 8001,
+//   },
+//   {
+//     id: 13,
+//     name: "The404ManagerFront",
+//     status: "online",
+//     portNumber: 8004,
+//   },
+//   {
+//     id: 14,
+//     name: "The404ManagerBack",
+//     status: "online",
+//     portNumber: 8000,
+//   },
+// ];

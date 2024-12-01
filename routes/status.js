@@ -12,54 +12,50 @@ const App = require("../models/app");
 // const User = require("../models/user");
 
 // Route to list files in /etc/nginx/conf.d/
-router.get("/list-nginx-files", async (req, res) => {
-  // // Test uncaught exception
-  // throw new Error("Test Uncaught Exception");
+// router.get("/list-nginx-files", async (req, res) => {
+router.get("/list-apps", async (req, res) => {
   const nginxFilesList = await createNginxFilesList(
     process.env.NGINX_CONF_D_PATH
   );
-  console.log(`file nginx: ${process.env.NGINX_CONF_D_PATH}`);
-  // console.log(nginxFilesList);
 
-  // GET
-  // -> name of app [pm2]
-  // -> urls [check]
-  // -> local IP
-  // -> port number [check]
   pm2AppList = await createPm2AppList();
-  console.log("-- what is pm2AppList ???");
-  console.log(pm2AppList);
-  console.log("typeof ::::::::");
-  console.log(typeof pm2AppList);
-
-  for (prop in pm2AppList) {
-    console.log("prop: ", prop);
-  }
-  console.log("--- that ass about pm2AppList ----");
 
   const appList = mergePm2AndNginxLists(pm2AppList, nginxFilesList);
   if (process.env.NODE_ENV === "production") {
-    appList.map((elem) => {
-      App.find({ localIp: elem.localIpAddress, port: elem.portNumber }).then(
-        (app) => {
-          App.updateOne(
-            { localIp: elem.localIpAddress, port: elem.portNumber },
-            {
-              name: elem.name,
-              urls: elem.serverNames,
-              lastUpdatedDate: new Date(),
-            }
-          );
-        }
+    appList.map(async (elem) => {
+      const { localIp, port, ...rest } = elem;
+      const updatedProps = {
+        ...rest, // Spread the existing properties
+        lastUpdatedDate: new Date(), // Add the new property
+      };
+      await App.updateOne(
+        { localIp, port }, // search properties
+        { $set: updatedProps }, // Update fields
+        { upsert: true } // Create a new document if no match is found
       );
-      const newApp = new App({
-        localIp: elem.localIpAddress,
-        port: elem.portNumber,
-        name: elem.name,
-        urls: elem.serverNames,
-        lastUpdatedDate: new Date(),
-      });
-      newApp.save();
+
+      // App.find({ localIp: elem.localIpAddress, port: elem.portNumber }).then(
+      //   (app) => {
+      //     App.updateOne(
+      //       { localIp: elem.localIpAddress, port: elem.port },
+      //       {
+      //         name: elem.name,
+      //         urls: elem.serverNames,
+      //         lastUpdatedDate: new Date(),
+      //       }
+      //     );
+      //   }
+
+      // );
+
+      // const newApp = new App({
+      //   localIp: elem.localIpAddress,
+      //   port: elem.portNumber,
+      //   name: elem.name,
+      //   urls: elem.serverNames,
+      //   lastUpdatedDate: new Date(),
+      // });
+      // newApp.save();
     });
   }
   res.json({ appList });
