@@ -18,6 +18,9 @@ router.get("/list-apps", async (req, res) => {
     process.env.NGINX_CONF_D_PATH
   );
 
+  console.log("-- createNginxFilesList > nginxFilesList --");
+  console.log(nginxFilesList);
+
   pm2AppList = await createPm2AppList();
 
   const appList = mergePm2AndNginxLists(pm2AppList, nginxFilesList);
@@ -35,6 +38,7 @@ router.get("/list-apps", async (req, res) => {
       );
     });
   }
+
   res.json({ appList });
 });
 

@@ -51,7 +51,8 @@ async function createNginxFilesList(directoryPath) {
         // const { serverNames, portNumber } = await extractFileDetails(fullPath);
         const { urls, port } = await extractFileDetails(fullPath);
         fileList.push({
-          fileName: file,
+          // fileName: file,
+          confdFilename: file,
           // serverNames,
           // portNumber,
           urls,
@@ -101,13 +102,13 @@ async function createPm2AppList() {
         appProjectPath: app.pm2_env.pm_cwd ?? "no cwd",
       }));
 
-      apps.forEach((elem, index) => {
-        console.log(`appList index #: ${index}`);
-        console.log(`appList elem:`, elem);
-        console.log(`appList elem.name: ${elem.name}`);
-      });
+      // apps.forEach((elem, index) => {
+      //   console.log(`appList index #: ${index}`);
+      //   console.log(`appList elem:`, elem);
+      //   console.log(`appList elem.name: ${elem.name}`);
+      // });
 
-      console.log("- finished createPm2AppList");
+      // console.log("- finished createPm2AppList");
       resolve(apps);
     });
   });
@@ -165,10 +166,14 @@ function mergePm2AndNginxLists(pm2AppList, nginxFilesList) {
     const matchingNginxFile = nginxNoDups.find(
       (nginxFile) => nginxFile.port == pm2App.port
     );
+
     return matchingNginxFile
       ? { ...matchingNginxFile, ...pm2App, localIp: localIpAddress }
       : { ...pm2App, localIp: localIpAddress };
   });
+
+  console.log("--- mergedList ---");
+  console.log(mergedList);
 
   return mergedList;
 }
